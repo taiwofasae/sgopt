@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from typing import Callable, Optional, Tuple
-from grinding.model.grinding import GrindingModel
-from grinding.model.input import GrindingInput
-from grinding.model.input import ProcessInput, ProcessInput7, ProcessInput7Values
+from grinding.model.grinding_model import GrindingModel
+from grinding.model.input_utils import GrindingInput
+from grinding.model.input_utils import ProcessInput, ProcessInput7, ProcessInput7Values
 
 class BaseOptimization(BaseModel):
     grinding_model : GrindingModel
@@ -13,14 +13,14 @@ class BaseOptimization(BaseModel):
     result : list[GrindingInput] = None
     
     def __str__(self) -> str:
-        output = f"Optimization:\n" + \
-            f"Grinding model: {self.grinding_model}\n" + \
-                f"Objective: {self.objective}\n" + \
-                    f"Constraints: {self.constraints}\n" + \
-                        f"Lower bound: {self.input_lower_bound}\n" + \
-                            f"Upper bound: {self.input_upper_bound}\n" + \
-                                f"Results:\n" + \
-                                    f"{self.result}"
+        return '\n'.join(["Optimization:",
+                          f"Grinding model: {self.grinding_model}",
+                          f"Objective: {self.objective}",
+                          f"Constraints: {self.constraints}",
+                          f"Lower bound: {self.input_lower_bound}",
+                          f"Upper bound: {self.input_upper_bound}",
+                          "Results:",
+                          f"{self.result}"])
                                     
         return output
         

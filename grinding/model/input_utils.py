@@ -19,17 +19,16 @@ class GrindingInput(BaseModel):
 
 class ProcessInput(BaseModel):
     inputs : list[GrindingInput]
-    total_cut_depth : float = None
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if not self.total_cut_depth:
-            self.total_cut_depth = sum([inp.cut_depth for inp in self.inputs])
     
     @computed_field
     @property
     def n_passes(self) -> int:
         return len(self.inputs)
+    
+    @computed_field
+    @property
+    def total_cut_depth(self) -> float:
+        return sum([inp.cut_depth for inp in self.inputs])
     
     def __str__(self) -> str:
         output = f"Process Input:\n"

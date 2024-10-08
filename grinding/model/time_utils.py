@@ -1,5 +1,5 @@
-from grinding.model.input import GrindingInput
-from grinding.model.configuration import WorkpieceParameters, MachineParameters
+from input_utils import GrindingInput
+from configuration import WorkpieceParameters, MachineParameters
 
 
 class Time:
