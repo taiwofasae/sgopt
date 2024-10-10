@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from input_utils import GrindingInput
-import common
+from .input_utils import GrindingInput
+from . import common
 
 def actd(g_input : GrindingInput, D_e : float, f : float, d : float):
     qp = common.qprime(g_input)

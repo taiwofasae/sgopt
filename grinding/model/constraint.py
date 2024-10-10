@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Callable
-from input_utils import GrindingInput
-from input_utils import ProcessInput, ProcessInput7
+from .input_utils import GrindingInput
+from .input_utils import ProcessInput, ProcessInput7
 
 class Constraint(BaseModel):
     fx : Callable[[GrindingInput], bool]

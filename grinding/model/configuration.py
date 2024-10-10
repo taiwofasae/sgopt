@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from typing import TypeVar, Generic
+import json
 
    
 class CostParameters(BaseModel):
@@ -30,6 +32,12 @@ class GrindingConfiguration(BaseModel):
     workpiece_parameters : WorkpieceParameters
     machine_parameters : MachineParameters
 
+class FileLoad:
+    def from_file(filepath : str, parameterType):
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            
+        return parameterType(**data)
 
 if __name__ == '__main__':
     print(CostParameters(

@@ -1,8 +1,8 @@
 from pydantic import BaseModel
-from input_utils import GrindingInput
-from configuration import CostParameters, MachineParameters, WorkpieceParameters
-from time_utils import Time
-from wheel_wear import WhealWear
+from .input_utils import GrindingInput
+from .configuration import CostParameters, MachineParameters, WorkpieceParameters
+from .time_utils import Time
+from .wheel_wear import WhealWear
 
 
 class CostModel(BaseModel):

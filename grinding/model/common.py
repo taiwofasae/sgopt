@@ -1,4 +1,4 @@
-from input_utils import GrindingInput
+from .input_utils import GrindingInput
 
     
 def heq(g_input : GrindingInput) -> float:

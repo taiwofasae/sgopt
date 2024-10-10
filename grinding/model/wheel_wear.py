@@ -1,6 +1,6 @@
-from input_utils import GrindingInput
-from configuration import WorkpieceParameters, MachineParameters
-from grinding_ratio import GrindingRatio
+from .input_utils import GrindingInput
+from .configuration import WorkpieceParameters, MachineParameters
+from .grinding_ratio import GrindingRatio
 
 class WhealWear:
     def grinding(g_input : GrindingInput,

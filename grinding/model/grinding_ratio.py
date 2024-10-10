@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from input_utils import GrindingInput
-from configuration import WorkpieceParameters
-from common import heq
+from .input_utils import GrindingInput
+from .configuration import WorkpieceParameters
+from .common import heq
 
 
 class GrindingRatio(BaseModel):

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, computed_field
 from typing import Tuple, Optional
+import json
 
 ProcessInput7Values = Tuple[float, float, float, int, float, float, float]
 InputValues = Tuple[float, float, float]
@@ -12,8 +13,15 @@ class GrindingInput(BaseModel):
     def get_values(self) -> InputValues:
         return [self.work_speed, self.cut_depth, self.wheel_speed]
     
-    def from_values(values : list[float]):
+    def from_values(values : InputValues):
         return GrindingInput(work_speed=values[0], cut_depth=values[1], wheel_speed=values[2])
+    
+    def to_json(self) -> str:
+        return f'{{"work_speed":{self.work_speed}, "cut_depth": {self.cut_depth}, "wheel_speed": {self.wheel_speed}}}'
+    
+    def from_json(string : str):
+        data = json.loads(string)
+        return GrindingInput(**data)
     
     
 
@@ -39,10 +47,15 @@ class ProcessInput(BaseModel):
     def get_values(self) -> list[InputValues]:
         return [x.get_values() for x in self.inputs]
     
-    def from_values(values : list[float]):
-        inputs = []
-        return ProcessInput(inputs=[GrindingInput.from_values(values[i:i+2]) for i in range(2,len(values),3)])
+    def from_values(values : list[InputValues]):
+        return ProcessInput(inputs=[GrindingInput.from_values(val) for val in values])
     
+    def to_json(self) -> str:
+        return '{"inputs":[' + ',\n\t'.join([inp.to_json() for inp in self.inputs]) + ']}'
+    
+    def from_json(string : str):
+        data = json.loads(string)
+        return ProcessInput(**data)
 
 
 class ProcessInput7(ProcessInput):
@@ -65,6 +78,16 @@ class ProcessInput7(ProcessInput):
     
     def from_values(values : ProcessInput7Values):
         return ProcessInput7(rough=values[:3], r_passes=values[3], finish=values[4:])
+    
+    def from_g_input(g_input : GrindingInput, r_passes : int):
+        return ProcessInput7(rough=g_input, finish=g_input, r_passes=r_passes)
+    
+    def to_json(self) -> str:
+        return f'{{"rough":{self.rough.to_json()}, "r_passes": {self.r_passes}, "finish": {self.finish.to_json()}}}'
+    
+    def from_json(string : str):
+        data = json.loads(string)
+        return ProcessInput7(**data)
     
     
     

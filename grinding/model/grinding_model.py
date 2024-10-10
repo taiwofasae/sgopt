@@ -1,14 +1,14 @@
 from pydantic import BaseModel
 from typing import Callable, Tuple
-from input_utils import GrindingInput
-from input_utils import ProcessInput, ProcessInput7
-from configuration import CostParameters, MachineParameters, WorkpieceParameters
-from cost import CostModel
-from constraint import ProcessConstraint, ProcessConstraint7
-import constants
-import common
-from surface_roughness import SurfaceRoughnessModel
-from burn import BurnModel
+from .input_utils import GrindingInput
+from .input_utils import ProcessInput, ProcessInput7
+from .configuration import CostParameters, MachineParameters, WorkpieceParameters
+from .cost import CostModel
+from .constraint import ProcessConstraint, ProcessConstraint7
+from . import constants
+from . import common
+from .surface_roughness import SurfaceRoughnessModel
+from .burn import BurnModel
 
 class GrindingModel(BaseModel):
     lower_input_range : GrindingInput
@@ -32,7 +32,7 @@ class GrindingModel(BaseModel):
         return '\n\t'.join(["GrindingModel:",
             f"Cost params: {self.cost_params}",
             f"Machine params: {self.machine_params}",
-            f"Workpiece params: {self.machine_params}",
+            f"Workpiece params: {self.workpiece_params}",
             f"Cost model: {self.cost_model}",
             f"Input ranges:",
             f"\tLower: {self.lower_input_range}",
@@ -53,7 +53,8 @@ class GrindingModel(BaseModel):
         return [c(inputs) for c in self.constraints]
 
 class GrindingModel7(GrindingModel):
-    constraints : list[ProcessConstraint7] = []  
+    constraints : list[ProcessConstraint7] = []
+    
     
 if __name__ == '__main__':
     print(GrindingModel7(

@@ -1,6 +1,6 @@
 from typing import Any
 from pydantic import BaseModel
-from input_utils import GrindingInput
+from .input_utils import GrindingInput
 
 class BurnModel(BaseModel):
     
