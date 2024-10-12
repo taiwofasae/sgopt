@@ -18,11 +18,11 @@ class CostModel(BaseModel):
         return WhealWear.grinding(g_input, self.workpiece_params) * self.cost_params.C_s
 
     def grinding(self, g_input : GrindingInput) -> float:
-        return CostModel.time(g_input) + CostModel.wheel_wear(g_input)
+        return CostModel.time(self, g_input) + CostModel.wheel_wear(self, g_input)
     
     def burn(self, g_input : GrindingInput) -> float:
-        return 0
+        return 0 # TODO
     
     def total(self, g_input : GrindingInput) -> float:
-        return CostModel.grinding(g_input) + CostModel.burn(g_input)
+        return CostModel.grinding(self, g_input) + CostModel.burn(self, g_input)
     

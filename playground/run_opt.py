@@ -50,6 +50,10 @@ parser.add_argument('--optimizer', type=Optimizer.from_string, choices=list(Opti
 parser.add_argument('--output_json_path', action="store", dest='output_json_path', 
                     default=None, help='File path for opt output')
 
+
+parser.add_argument('--r_passes', action="store", dest='r_passes', 
+                    default=None, help='No. of rough passes')
+
 class ParseKwargs(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, dict())
@@ -61,6 +65,9 @@ parser.add_argument('--pp', action=ParseKwargs, dest='pp', nargs='*',
                     help='Update parameters')
 
 args = parser.parse_args()
+
+output_json_file = args.output_json_path or str(uuid.uuid4())
+output_json_file = output_json_file if os.path.splitext(output_json_file)[1] else f'{output_json_file}.json'
 
 # Individual arguments can be accessed as attributes...
 # print(args)
@@ -101,17 +108,17 @@ g_model = GrindingModel7(
         machine_params=machine_params,
         workpiece_params=workpiece_params,
         constraints=[
-            ProcessConstraint7(desc='> Q_prime_l', fx= lambda x: common.qprime(x.rough.work_speed) > process_params.Q_prime_l),
-            ProcessConstraint7(desc='< Q_prime_u', fx= lambda x: common.qprime(x.rough.work_speed) < process_params.Q_prime_u),
+            ProcessConstraint7(desc='> Q_prime_l', fx= lambda x: process_params.Q_prime_l - common.qprime(x.rough)),
+            ProcessConstraint7(desc='< Q_prime_u', fx= lambda x: common.qprime(x.rough) - process_params.Q_prime_u),
             ProcessConstraint7(desc='< Ra_max', 
                                fx= lambda x: SurfaceRoughnessModel(D_e=machine_params.D_e,
                                                                    f=machine_params.f,
-                                                                   d=machine_params.d)(x.finish) < process_params.Ra_max),
+                                                                   d=machine_params.d)(x.finish) - process_params.Ra_max),
             ProcessConstraint7(desc='no_burn_rough', 
-                               fx= lambda x: BurnModel()(x.rough) < process_params.burnp_r_max),
+                               fx= lambda x: BurnModel()(x.rough) - process_params.burnp_r_max),
             ProcessConstraint7(desc='no_burn_finish', 
-                               fx= lambda x: BurnModel()(x.finish) < process_params.burnp_f_max),
-            ProcessConstraint7(desc='= a total', fx= lambda x: (x.total_cut_depth - process_params.a_total) < 0.01)
+                               fx= lambda x: BurnModel()(x.finish) - process_params.burnp_f_max),
+            ProcessConstraint7(desc='= a total', fx= lambda x: abs(x.total_cut_depth - process_params.a_total) - 0.01)
         ],
         lower_input_range=GrindingInput(work_speed=process_params.v_w_l, cut_depth=process_params.a_l, wheel_speed=process_params.v_s_l),
         upper_input_range=GrindingInput(work_speed=process_params.v_w_u, cut_depth=process_params.a_u, wheel_speed=process_params.v_s_u),
@@ -120,6 +127,8 @@ g_model = GrindingModel7(
 if args.verbose:
     print(g_model)
 print('...Building optimization commands...')
+
+
 
 g_opt_ga = GeneticAlgorithm(
     grinding_model=g_model,
@@ -131,32 +140,43 @@ g_opt_ga = GeneticAlgorithm(
 
 if args.verbose:
     print(g_opt_ga)
-
-g_opt_sgd = GradientDescent(
-    grinding_model=g_model,
-    objective=g_model.total_cost,
-    constraints=lambda x: [con.fx(x) for con in g_model.constraints],
-    input_lower_bound=ProcessInput7.from_g_input(g_model.lower_input_range, r_passes=1),
-    input_upper_bound=ProcessInput7.from_g_input(g_model.upper_input_range, r_passes=10)
-)
+    
+print('...running...')
+result = g_opt_ga.run()
 
 if args.verbose:
-    print(g_opt_sgd)
+    print("GA result:")
+    print(result)
+    
+if args.optimizer == Optimizer.sgd:
 
-print('...running...')
+    g_opt_sgd = GradientDescent(
+        grinding_model=g_model,
+        objective=g_model.total_cost,
+        constraints=lambda x: [con.fx(x) for con in g_model.constraints],
+        input_lower_bound=ProcessInput7.from_g_input(g_model.lower_input_range, r_passes=1),
+        input_upper_bound=ProcessInput7.from_g_input(g_model.upper_input_range, r_passes=10)
+    )
 
-result0 = g_opt_ga.run()
+    if args.verbose:
+        print(g_opt_sgd)
 
-result = g_opt_sgd.run(start=result0)
+
+    result0 = result
+    result = g_opt_sgd.run(start=result0)
+
 
 print('Completed.\nResults:')
 print(result)
 
 # saving to file
-output_json_file = args.output_json_path or str(uuid.uuid4())
-output_json_file = output_json_file if os.path.splitext(output_json_file)[1] else f'{output_json_file}.json'
+
 with open(output_json_file, 'w') as f:
-    f.write(result.to_json(result0 = result0.to_json()))
+    f.write(result.to_json(population=g_opt_ga.population))
+    
+if args.optimizer == Optimizer.sgd:
+    with open(output_json_file, 'w') as f:
+        f.write(result.to_json(result0 = result0.to_json(),population=g_opt_ga.population))
     
 with open(f"{os.path.splitext(output_json_file)[0]}.pp.json", 'w') as f:
     f.write(json.dumps(pp))

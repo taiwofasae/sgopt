@@ -3,6 +3,8 @@ from typing import Tuple, Optional
 import json
 
 ProcessInput7Values = Tuple[float, float, float, int, float, float, float]
+ProcessInput6Values = Tuple[float, float, float, int, float, float]
+ProcessInput5Values = Tuple[float, float, float, float, float]
 InputValues = Tuple[float, float, float]
 
 class GrindingInput(BaseModel):
@@ -74,10 +76,16 @@ class ProcessInput7(ProcessInput):
         return output
     
     def get_values(self) -> ProcessInput7Values:
-        return self.rough.get_values() + [self.r_passes] + [self.finish.get_values()]
+        return self.rough.get_values() + [self.r_passes] + self.finish.get_values()
     
+    def get_float_values(self) -> list[float]:
+        return self.rough.get_values() + self.finish.get_values()
+
     def from_values(values : ProcessInput7Values):
-        return ProcessInput7(rough=values[:3], r_passes=values[3], finish=values[4:])
+        return ProcessInput7(rough=GrindingInput.from_values(values[:3]), r_passes=values[3], finish=GrindingInput.from_values(values[4:]))
+    
+    def from_float_values(values : list[float], r_passes : int):
+        return ProcessInput7(rough=GrindingInput.from_values(values[:3]), r_passes=r_passes, finish=GrindingInput.from_values(values[3:]))
     
     def from_g_input(g_input : GrindingInput, r_passes : int):
         return ProcessInput7(rough=g_input, finish=g_input, r_passes=r_passes)
@@ -90,8 +98,7 @@ class ProcessInput7(ProcessInput):
     def from_json(string : str):
         data = json.loads(string)
         return ProcessInput7(**data)
-    
-    
+
     
 if __name__ == '__main__':
     print(GrindingInput(work_speed=34, wheel_speed=50, cut_depth=0.03))

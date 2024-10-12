@@ -5,8 +5,8 @@ from .common import heq
 
 
 class GrindingRatio(BaseModel):
-    G_0 : float = 0
-    g : float = 0
+    G_0 : float = 14.0
+    g : float = -0.13
         
     def __str__(self) -> str:
         return "Grinding ratio: " + super().__str__()

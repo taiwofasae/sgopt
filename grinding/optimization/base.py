@@ -52,7 +52,7 @@ class BaseOptimization(BaseModel):
 class BaseOptimization7(BaseOptimization):
     
     objective : Callable[[ProcessInput7], float]
-    constraints : Callable[[ProcessInput7], list[bool]]
+    constraints : Callable[[ProcessInput7], list[float]]
     input_lower_bound : ProcessInput7
     input_upper_bound : ProcessInput7
     result : list[ProcessInput7] = None

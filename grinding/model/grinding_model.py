@@ -62,8 +62,8 @@ if __name__ == '__main__':
         machine_params=MachineParameters(R_t=0, d_s=250, b_s=25),
         workpiece_params=WorkpieceParameters(L_w=250, b_w=30),
         constraints=[
-            ProcessConstraint7(desc='> Q_prime_l', fx= lambda x: common.qprime(x.rough.work_speed) > constants.PROCESS_SETTINGS.Q_prime_l),
-            ProcessConstraint7(desc='< Q_prime_u', fx= lambda x: common.qprime(x.rough.work_speed) < constants.PROCESS_SETTINGS.Q_prime_u),
+            ProcessConstraint7(desc='> Q_prime_l', fx= lambda x: common.qprime(x.rough) > constants.PROCESS_SETTINGS.Q_prime_l),
+            ProcessConstraint7(desc='< Q_prime_u', fx= lambda x: common.qprime(x.rough) < constants.PROCESS_SETTINGS.Q_prime_u),
             ProcessConstraint7(desc='power_max', fx= lambda x: True),
             ProcessConstraint7(desc='force_max', fx= lambda x: True),
             ProcessConstraint7(desc='stress_max', fx= lambda x: True),

@@ -2,17 +2,21 @@
 import json
 from grinding.model import common, constants
 from grinding.model.burn import BurnModel
-from grinding.model.configuration import CostParameters, FileLoad, MachineParameters, WorkpieceParameters
+from grinding.model.configuration import CostParameters, MachineParameters, ParametersLoad, WorkpieceParameters
 from grinding.model.constraint import ProcessConstraint7
 from grinding.model.grinding_model import GrindingModel, GrindingModel7
 from grinding.model.input_utils import GrindingInput, ProcessInput, ProcessInput7
 from grinding.model.surface_roughness import SurfaceRoughnessModel
 from grinding.optimization.base import BaseOptimization, BaseOptimization7
 
+machine_params = ParametersLoad.from_file('process_parameters.json', MachineParameters)
+cost_params = ParametersLoad.from_file('process_parameters.json', CostParameters)
+workpiece_params = ParametersLoad.from_file('process_parameters.json', WorkpieceParameters)
+
 g_model = GrindingModel7(
-        cost_params=CostParameters(M=200, C_s=200, C_w=0.25),
-        machine_params=MachineParameters(R_t=0, d_s=250, b_s=25),
-        workpiece_params=WorkpieceParameters(L_w=250, b_w=30),
+        cost_params=cost_params,
+        machine_params=machine_params,
+        workpiece_params=workpiece_params,
         constraints=[
             ProcessConstraint7(desc='> Q_prime_l', fx= lambda x: common.qprime(x.rough.work_speed) > constants.PROCESS_SETTINGS.Q_prime_l),
             ProcessConstraint7(desc='< Q_prime_u', fx= lambda x: common.qprime(x.rough.work_speed) < constants.PROCESS_SETTINGS.Q_prime_u),
@@ -44,8 +48,6 @@ print(BaseOptimization7(
     input_upper_bound=ProcessInput7.from_g_input(g_model.upper_input_range, r_passes=10)
 ))
 
-print(FileLoad.from_file('process_parameters.json', WorkpieceParameters))
-print(FileLoad.from_file('process_parameters.json', CostParameters))
 
 print(GrindingInput.from_json(GrindingInput(work_speed=4, cut_depth=2.3, wheel_speed=5.4).to_json()))
 print(ProcessInput.from_json(ProcessInput(inputs=[
@@ -56,3 +58,6 @@ print(ProcessInput.from_json(ProcessInput(inputs=[
 print(ProcessInput7.from_json(ProcessInput7(rough=GrindingInput(work_speed=4, cut_depth=2.3, wheel_speed=5.4),
     finish=GrindingInput(work_speed=4, cut_depth=2.3, wheel_speed=5.4),
     r_passes=4).to_json()))
+
+print(g_model.total_cost(ProcessInput7.from_values([800, 0.5, 50, 4, 700, 0.5, 60])))
+
