@@ -3,12 +3,12 @@ from typing import Callable
 from grinding.optimization.base import BaseOptimization, BaseOptimization7
 from grinding.model.input_utils import GrindingInput, ProcessInput, ProcessInput7
 
-class GradientDescent(BaseOptimization7):
-    result : ProcessInput7 = None
+class GeneticAlgorithm(BaseOptimization7):
+    population : list[ProcessInput7] = None
     
     
-    def run(self, start : ProcessInput7) -> ProcessInput7:
-        print("Running Gradient descent algorithm...")
+    def run(self) -> ProcessInput7:
+        print("Running Genetic algorithm...")
         
         # Get starting input set
         # Provide input range
@@ -19,9 +19,8 @@ class GradientDescent(BaseOptimization7):
         # Provide nonlinear constraint functions
         nonlcon_fx = self.constraints
         
-        results = []
-        
-        self.result = start
+        self.result = ProcessInput7(rough=GrindingInput(work_speed=5,cut_depth=.2, wheel_speed=40),
+                                    finish=GrindingInput(work_speed=5,cut_depth=.2, wheel_speed=40),
+                                    r_passes=5)
         
         return self.result
-    

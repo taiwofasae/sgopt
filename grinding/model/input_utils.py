@@ -82,8 +82,10 @@ class ProcessInput7(ProcessInput):
     def from_g_input(g_input : GrindingInput, r_passes : int):
         return ProcessInput7(rough=g_input, finish=g_input, r_passes=r_passes)
     
-    def to_json(self) -> str:
-        return f'{{"rough":{self.rough.to_json()}, "r_passes": {self.r_passes}, "finish": {self.finish.to_json()}}}'
+    def to_json(self, **kwargs) -> str:
+        return f'{{"rough":{self.rough.to_json()}, "r_passes": {self.r_passes}, "finish": {self.finish.to_json()}' + \
+            ' '.join([f',"{key}": {kwargs[key]}' for key in kwargs]) + \
+    '}'
     
     def from_json(string : str):
         data = json.loads(string)

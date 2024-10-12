@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import TypeVar, Generic
+from typing import Tuple, TypeVar, Generic
 import json
 
    
@@ -22,22 +22,48 @@ class MachineParameters(BaseModel):
     R_t : float
     d_s : float
     b_s : float
+    D_e : float
+    f : float
+    d : float
     
     def __str__(self) -> str:
         return "Machine Params: " + super().__str__()
     
+
+class ProcessParameters(BaseModel):
+    Q_prime_l : float
+    Q_prime_u : float
+    Ra_max : float
+    burnp_r_max : float
+    burnp_f_max : float
+    a_total : float
+    v_w_l : float
+    v_w_u : float
+    a_l : float
+    a_u : float
+    v_s_l : float
+    v_s_u : float
+    
+    def __str__(self) -> str:
+        return "Process Params: " + super().__str__()
 
 class GrindingConfiguration(BaseModel):
     cost_parameters : CostParameters
     workpiece_parameters : WorkpieceParameters
     machine_parameters : MachineParameters
 
-class FileLoad:
-    def from_file(filepath : str, parameterType):
+T = TypeVar
+class ParametersLoad:
+    def load_dict_from_file(filepath : str) -> dict:
         with open(filepath, 'r') as f:
             data = json.load(f)
             
-        return parameterType(**data)
+        return dict(**data)
+        
+    def from_file(filepath : str, parameterType : T) -> T:
+        
+        kv = ParametersLoad.load_dict_from_file(filepath)
+        return parameterType(**kv)
 
 if __name__ == '__main__':
     print(CostParameters(

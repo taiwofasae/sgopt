@@ -15,7 +15,7 @@ class BaseOptimization(BaseModel):
     constraints : Callable[[ProcessInput], list[bool]]
     input_lower_bound : GrindingInput
     input_upper_bound : GrindingInput
-    result : list[ProcessInput] = None
+    result : ProcessInput = None
     
     def __str__(self) -> str:
         return '\n'.join(["Optimization:",
@@ -47,8 +47,6 @@ class BaseOptimization(BaseModel):
         
         results = []
         
-        self.result = results
-        
         return self.result
 
 class BaseOptimization7(BaseOptimization):
@@ -77,8 +75,6 @@ class BaseOptimization7(BaseOptimization):
         nonlcon_fx = self.constraints
         
         results = []
-        
-        self.result = results
         
         return self.result
     
