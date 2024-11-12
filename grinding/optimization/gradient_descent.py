@@ -9,6 +9,7 @@ import numpy as np
 
 class GradientDescent(BaseOptimization7):
     result : ProcessInput7 = None
+    results : dict = {}
     
     
     def run(self, start : ProcessInput7) -> ProcessInput7:
@@ -44,7 +45,9 @@ class GradientDescent(BaseOptimization7):
                 constraints=[linear_constraint, nonlinear_constraint],
                 options={'verbose': 1}, bounds=bounds)
             
-            solutions.append(ProcessInput7.from_float_values(res.x, r_passes))
+            result = ProcessInput7.from_float_values(res.x, r_passes)
+            self.results[r_passes] = result
+            solutions.append(result)
             
         self.result = solutions_utils.best_solution(solutions, self.objective)
         

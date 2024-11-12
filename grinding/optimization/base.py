@@ -78,6 +78,9 @@ class BaseOptimization7(BaseOptimization):
         
         return self.result
     
+    def naive_result(self) -> ProcessInput7:
+        return ProcessInput7.from_values([40, 0.60, 70, 3, 40, 0.20, 70])
+    
 if __name__ == '__main__':
     g_model = GrindingModel7(
         cost_params=CostParameters(M=200, C_s=200, C_w=0.25),

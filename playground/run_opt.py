@@ -7,13 +7,14 @@ import time
 import uuid
 
 from grinding.model import common
-from grinding.model.burn import BurnModel
+from grinding.model.burn import BurnModel, CTLParameters
 from grinding.model.configuration import CostParameters, MachineParameters, ParametersLoad, ProcessParameters, WorkpieceParameters
 from enum import Enum
 
 from grinding.model.constraint import ProcessConstraint7
 from grinding.model.grinding_model import GrindingModel7
 from grinding.model.input_utils import GrindingInput, ProcessInput7
+from grinding.model.power import PowerParameters
 from grinding.model.surface_roughness import SurfaceRoughnessModel
 from grinding.optimization.base import BaseOptimization7
 from grinding.optimization.ga import GeneticAlgorithm
@@ -44,8 +45,10 @@ class Optimizer(Enum):
         except KeyError:
             raise ValueError()
     
-parser.add_argument('--optimizer', type=Optimizer.from_string, choices=list(Optimizer),
-                    dest='optimizer', default='sgd', help="'sgd' or 'ga'")
+# parser.add_argument('--optimizer', type=Optimizer.from_string, choices=list(Optimizer),
+#                     dest='optimizer', default='sgd', help="'sgd' or 'ga'")
+parser.add_argument('--sgd', action="store_true", help="Gradient descent")
+parser.add_argument('--ga', action="store_true", help="Genetic algorithm")
 
 parser.add_argument('--output_json_path', action="store", dest='output_json_path', 
                     default=None, help='File path for opt output')
@@ -97,6 +100,12 @@ if args.verbose:
 process_params = ProcessParameters(**pp)
 if args.verbose:
     print(process_params)
+ctl_params = CTLParameters(**pp)
+if args.verbose:
+    print(ctl_params)
+power_params = PowerParameters(**pp)
+if args.verbose:
+    print(power_params)
 
 print('...process parameters loading done!')
 
@@ -107,6 +116,8 @@ g_model = GrindingModel7(
         cost_params=cost_params,
         machine_params=machine_params,
         workpiece_params=workpiece_params,
+        ctl_params=ctl_params,
+        power_params=power_params,
         constraints=[
             ProcessConstraint7(desc='> Q_prime_l', fx= lambda x: process_params.Q_prime_l - common.qprime(x.rough)),
             ProcessConstraint7(desc='< Q_prime_u', fx= lambda x: common.qprime(x.rough) - process_params.Q_prime_u),
@@ -129,26 +140,43 @@ if args.verbose:
 print('...Building optimization commands...')
 
 
-
-g_opt_ga = GeneticAlgorithm(
+base_opt = BaseOptimization7(
     grinding_model=g_model,
     objective=g_model.total_cost,
     constraints=lambda x: [con.fx(x) for con in g_model.constraints],
     input_lower_bound=ProcessInput7.from_g_input(g_model.lower_input_range, r_passes=1),
     input_upper_bound=ProcessInput7.from_g_input(g_model.upper_input_range, r_passes=10)
 )
+result = base_opt.naive_result()
+result_dict = {
+    'result0': result.to_json(),
+    'population': []
+}
 
-if args.verbose:
-    print(g_opt_ga)
-    
-print('...running...')
-result = g_opt_ga.run()
+if args.ga:
+    g_opt_ga = GeneticAlgorithm(
+        grinding_model=g_model,
+        objective=g_model.total_cost,
+        constraints=lambda x: [con.fx(x) for con in g_model.constraints],
+        input_lower_bound=ProcessInput7.from_g_input(g_model.lower_input_range, r_passes=1),
+        input_upper_bound=ProcessInput7.from_g_input(g_model.upper_input_range, r_passes=10)
+    )
 
-if args.verbose:
-    print("GA result:")
-    print(result)
+    if args.verbose:
+        print(g_opt_ga)
+        
+    print('...running...')
+    result = g_opt_ga.run()
+
+    if args.verbose:
+        print("GA result:")
+        print(result)
+        
+    result_dict['population'] = '[' + \
+        ','.join([x.to_json() for x in g_opt_ga.population]) + \
+            ']'
     
-if args.optimizer == Optimizer.sgd:
+if args.sgd:
 
     g_opt_sgd = GradientDescent(
         grinding_model=g_model,
@@ -163,21 +191,27 @@ if args.optimizer == Optimizer.sgd:
 
 
     result0 = result
+    result_dict['result0'] = result0.to_json()
     result = g_opt_sgd.run(start=result0)
+    
+    
+    
+    if args.verbose:
+        print("SGD result:")
+        print(result)
+        print("SGD results by r_passes:")
+        for k,v in g_opt_sgd.results.items():
+            print(f"{k}: {v}")
 
 
-print('Completed.\nResults:')
+print('Completed.\nResult:')
 print(result)
 
 # saving to file
-
 with open(output_json_file, 'w') as f:
-    f.write(result.to_json(population=g_opt_ga.population))
-    
-if args.optimizer == Optimizer.sgd:
-    with open(output_json_file, 'w') as f:
-        f.write(result.to_json(result0 = result0.to_json(),population=g_opt_ga.population))
-    
+    f.write(result.to_json(**result_dict))
+       
+# save pp.json
 with open(f"{os.path.splitext(output_json_file)[0]}.pp.json", 'w') as f:
     f.write(json.dumps(pp))
     

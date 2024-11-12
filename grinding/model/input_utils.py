@@ -12,6 +12,41 @@ class GrindingInput(BaseModel):
     cut_depth : float
     wheel_speed : float
     
+    def from_scalar(other):
+        if isinstance(other, GrindingInput):
+            return other
+        return GrindingInput(work_speed=other, cut_depth=other, wheel_speed=other)
+    
+    def __add__(self, other):
+        other = GrindingInput.from_scalar(other)
+        return GrindingInput(work_speed=self.work_speed + other.work_speed,
+                             cut_depth=self.cut_depth + other.cut_depth,
+                             wheel_speed=self.wheel_speed + other.wheel_speed)
+        
+    def __sub__(self, other):
+        other = GrindingInput.from_scalar(other)
+        return GrindingInput(work_speed=self.work_speed - other.work_speed,
+                             cut_depth=self.cut_depth - other.cut_depth,
+                             wheel_speed=self.wheel_speed - other.wheel_speed)
+        
+    def __mul__(self, other):
+        other = GrindingInput.from_scalar(other)
+        return GrindingInput(work_speed=self.work_speed * other.work_speed,
+                             cut_depth=self.cut_depth * other.cut_depth,
+                             wheel_speed=self.wheel_speed * other.wheel_speed)
+        
+    def __truediv__(self, other):
+        other = GrindingInput.from_scalar(other)
+        if other.work_speed == 0.0:
+            other.work_speed = 1.0
+        if other.cut_depth == 0.0:
+            other.cut_depth = 1.0
+        if other.wheel_speed == 0.0:
+            other.wheel_speed = 1.0
+        return GrindingInput(work_speed=self.work_speed / other.work_speed,
+                             cut_depth=self.cut_depth / other.cut_depth,
+                             wheel_speed=self.wheel_speed / other.wheel_speed)
+    
     def get_values(self) -> InputValues:
         return [self.work_speed, self.cut_depth, self.wheel_speed]
     
@@ -58,6 +93,8 @@ class ProcessInput(BaseModel):
     def from_json(string : str):
         data = json.loads(string)
         return ProcessInput(**data)
+    
+    
 
 
 class ProcessInput7(ProcessInput):
@@ -65,8 +102,14 @@ class ProcessInput7(ProcessInput):
     finish : GrindingInput
     r_passes : int
     
+    @property
+    def inputs(self) -> list[GrindingInput]:
+        return [self.rough] * self.r_passes + [self.finish]
+    
     def __init__(self, **kwargs):
-        super().__init__(inputs=[kwargs['rough']]*kwargs['r_passes'] + [kwargs['finish']], **kwargs)
+        #print('Creating ProcessInput7:')
+        #print(f"rough:{kwargs['rough']}|r_passes:{kwargs['r_passes']}|finish:{kwargs['finish']}")
+        super().__init__(inputs=[kwargs['rough']]*int(kwargs['r_passes']) + [kwargs['finish']], **kwargs)
     
     def __str__(self) -> str:
         output = f"Process 7 Inputs:\n"
@@ -98,6 +141,39 @@ class ProcessInput7(ProcessInput):
     def from_json(string : str):
         data = json.loads(string)
         return ProcessInput7(**data)
+    
+    def from_scalar(other):
+        if isinstance(other, ProcessInput7):
+            return other
+        return ProcessInput7(rough=GrindingInput.from_scalar(other), 
+                             finish=GrindingInput.from_scalar(other),
+                             r_passes=0)
+    
+    def __add__(self, other):
+        other = ProcessInput7.from_scalar(other)
+        return ProcessInput7(rough=self.rough + other.rough,
+                             finish=self.finish + other.finish,
+                             r_passes=self.r_passes + other.r_passes)
+        
+    def __sub__(self, other):
+        other = ProcessInput7.from_scalar(other)
+        return ProcessInput7(rough=self.rough - other.rough,
+                             finish=self.finish - other.finish,
+                             r_passes=self.r_passes - other.r_passes)
+        
+    def __mul__(self, other):
+        other = ProcessInput7.from_scalar(other)
+        return ProcessInput7(rough=self.rough * other.rough,
+                             finish=self.finish * other.finish,
+                             r_passes=self.r_passes * other.r_passes)
+        
+    def __truediv__(self, other):
+        other = ProcessInput7.from_scalar(other)
+        if other.r_passes == 0:
+            other.r_passes = 1
+        return ProcessInput7(rough=self.rough / other.rough,
+                             finish=self.finish / other.finish,
+                             r_passes=int(self.r_passes / other.r_passes))
 
     
 if __name__ == '__main__':
